@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
-  Link,
   createRootRouteWithContext,
   useRouter,
   HeadContent,
@@ -14,59 +13,68 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-void)",
+        color: "var(--text-primary)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "var(--font-mono)",
+      }}
+    >
+      <div style={{ textAlign: "left" }}>
+        <div style={{ color: "var(--accent-secondary)", fontSize: "0.8rem", letterSpacing: "0.2em" }}>ERR 404</div>
+        <div style={{ fontSize: "2rem", letterSpacing: "0.15em", marginTop: 8 }}>ROUTE NOT FOUND</div>
+        <a href="/" style={{ display: "inline-block", marginTop: 16, color: "var(--accent-primary)", fontSize: "0.75rem", letterSpacing: "0.12em" }}>
+          [ ← RETURN HOME ]
+        </a>
       </div>
     </div>
   );
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg-void)",
+        color: "var(--text-primary)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "var(--font-mono)",
+        padding: 24,
+      }}
+    >
+      <div>
+        <div style={{ color: "var(--accent-secondary)", letterSpacing: "0.2em", fontSize: "0.75rem" }}>RUNTIME EXCEPTION</div>
+        <div style={{ fontSize: "1.4rem", letterSpacing: "0.1em", marginTop: 8 }}>PIPELINE HALTED</div>
+        <pre style={{ fontSize: "0.7rem", color: "var(--text-dim)", marginTop: 12, maxWidth: 600, whiteSpace: "pre-wrap" }}>
+          {error.message}
+        </pre>
+        <button
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
+          style={{
+            marginTop: 16,
+            background: "var(--accent-primary)",
+            color: "#080808",
+            padding: "8px 18px",
+            fontSize: "0.75rem",
+            letterSpacing: "0.12em",
+          }}
+        >
+          [ RETRY ]
+        </button>
       </div>
     </div>
   );
@@ -77,19 +85,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { title: "AppForge — NL Compiler" },
+      { name: "description", content: "Natural language to application schema compiler." },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap",
+      },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href:
+          "data:image/svg+xml;base64," +
+          btoa(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#080808"/><text x="16" y="22" font-family="monospace" font-size="14" font-weight="700" fill="#e8ff47" text-anchor="middle">AF</text></svg>`,
+          ),
       },
     ],
   }),
@@ -115,10 +129,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
   );
