@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
-import { buildMockEvals } from "../lib/mock";
 import { CodeBlock } from "../components/shared/CodeBlock";
 import { TYPE_BADGE } from "../lib/constants";
 import type { EvalResult } from "../types/schema";
+import { getEvalResults, runEvalSuite } from "../lib/api";
 
 export const Route = createFileRoute("/evaluate")({
   head: () => ({
@@ -108,7 +108,57 @@ function Evaluate() {
   const [filter, setFilter] = useState<"all" | "real" | "edge" | "failed">("all");
   const [active, setActive] = useState<EvalResult | null>(null);
   const [hover, setHover] = useState<number | null>(null);
-  const all = useMemo(() => buildMockEvals(), []);
+  
+  const [all, setAll] = useState<EvalResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+
+  const fetchResults = async () => {
+    try {
+      const data = await getEvalResults();
+      setAll(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchResults();
+  }, []);
+
+  const handleRunAll = async () => {
+    setRunning(true);
+    try {
+      await runEvalSuite();
+      await fetchResults();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const handleExportCsv = () => {
+    if (!all.length) return;
+    const headers = ["id", "prompt", "type", "subType", "status", "retries", "latency", "confidence"];
+    const rows = all.map(r => 
+      headers.map(h => {
+        const val = (r as any)[h];
+        return typeof val === 'string' ? `"${val.replace(/"/g, '""')}"` : val;
+      }).join(",")
+    );
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "eval_results.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const filtered = useMemo(() => {
     return all.filter((e) =>
       filter === "all" ? true : filter === "failed" ? e.status !== "PASS" : e.type === filter,
@@ -132,6 +182,8 @@ function Evaluate() {
 
         <div style={{ display: "flex", gap: 12, marginTop: 20, alignItems: "center", flexWrap: "wrap" }}>
           <button
+            onClick={handleRunAll}
+            disabled={running}
             className="compile-btn"
             style={{
               background: "var(--accent-primary)",
@@ -140,9 +192,11 @@ function Evaluate() {
               fontFamily: "var(--font-mono)",
               fontSize: "0.78rem",
               letterSpacing: "0.1em",
+              opacity: running ? 0.7 : 1,
+              cursor: running ? "not-allowed" : "pointer",
             }}
           >
-            [ RUN ALL TESTS ]
+            {running ? "[ RUNNING TESTS... ]" : "[ RUN ALL TESTS ]"}
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--text-dim)", letterSpacing: "0.12em" }}>
@@ -167,6 +221,7 @@ function Evaluate() {
             </select>
           </div>
           <button
+            onClick={handleExportCsv}
             style={{
               border: "1px solid var(--bg-border)",
               padding: "8px 16px",
@@ -174,6 +229,7 @@ function Evaluate() {
               fontSize: "0.7rem",
               color: "var(--text-secondary)",
               letterSpacing: "0.1em",
+              cursor: "pointer",
             }}
           >
             [ EXPORT CSV ]
