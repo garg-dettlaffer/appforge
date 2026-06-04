@@ -1,19 +1,16 @@
-import google.generativeai as genai
+import google.genai as genai
+from google.genai import types
 import os
 import json
 import re
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = None
 
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=genai.GenerationConfig(
-        temperature=0.2,          # low temp = more deterministic
-        top_p=0.8,
-        response_mime_type="application/json",  # force JSON output
-    ),
-)
-
+def get_client():
+    global client
+    if client is None:
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    return client
 
 async def call_gemini(prompt: str, system: str = "") -> dict:
     """
@@ -23,7 +20,16 @@ async def call_gemini(prompt: str, system: str = "") -> dict:
     full_prompt = f"{system}\n\n{prompt}" if system else prompt
 
     try:
-        response = model.generate_content(full_prompt)
+        c = get_client()
+        response = c.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=full_prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.2,          # low temp = more deterministic
+                top_p=0.8,
+                response_mime_type="application/json",  # force JSON output
+            )
+        )
         raw = response.text.strip()
 
         # strip markdown fences if present
