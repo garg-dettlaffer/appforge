@@ -23,6 +23,7 @@ export interface LogEntry {
   ts: string;
   text: string;
   kind?: "info" | "warn" | "ok";
+  tag?: string;
 }
 export interface PipelineMetrics {
   tokensUsed: number;
@@ -38,10 +39,27 @@ export interface Stage {
   output: object | null;
   repaired: boolean;
 }
+export interface RepairEntry {
+  layer: "ui" | "api" | "db" | "auth";
+  issue: string;
+  fix: string;
+}
+export interface HistoryEntry {
+  id: string;
+  prompt: string;
+  ts: number;
+  status: "complete" | "failed";
+  latencyMs: number;
+  schema: FullSchema | null;
+  assumptions: string[];
+  metrics: PipelineMetrics;
+  repairLog: RepairEntry[];
+}
 export interface EvalResult {
   id: number;
   prompt: string;
   type: "real" | "edge";
+  subType: "real" | "edge_vague" | "edge_conflicting" | "edge_incomplete" | "edge_overloaded";
   status: "PASS" | "FAIL" | "PARTIAL";
   retries: number;
   latency: number;

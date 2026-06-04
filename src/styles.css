@@ -8,6 +8,7 @@
   --bg-border: #242424;
   --accent-primary: #e8ff47;
   --accent-secondary: #ff4757;
+  --accent-warn: #febc2e;
   --accent-muted: #3a3a3a;
   --text-primary: #e8e8e8;
   --text-secondary: #888888;
@@ -35,6 +36,8 @@
 * {
   box-sizing: border-box;
   border-color: var(--bg-border);
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
 }
 
 html,
@@ -49,8 +52,8 @@ body {
 }
 
 ::selection {
-  background: rgba(232, 255, 71, 0.3);
-  color: #080808;
+  background: rgba(232, 255, 71, 0.2);
+  color: #e8e8e8;
 }
 
 *:focus {
@@ -69,7 +72,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--accent-muted);
+  background: #2a2a2a;
 }
 
 input,
@@ -90,21 +93,46 @@ a {
   text-decoration: none;
 }
 
+/* ====================== ANIMATIONS ====================== */
+
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: cursorBlink 1s steps(1) infinite;
+}
+
+@keyframes bracketFade {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.bracket-fade {
+  animation: bracketFade 2s ease-in-out infinite;
+}
+
+@keyframes borderPulse {
+  0%, 100% { border-bottom-color: #242424; }
+  50% { border-bottom-color: #2a2a2a; }
+}
+.border-pulse {
+  animation: borderPulse 3s linear infinite;
+}
+
+@keyframes stageProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.stage-progress {
+  animation: stageProgress 3s linear forwards;
+}
+
 @keyframes blink {
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
 .blink {
   animation: blink 1s steps(1) infinite;
-}
-
-@keyframes progressFill {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-.progress-fill {
-  transform-origin: left;
-  animation: progressFill 2s linear infinite;
 }
 
 @keyframes logLineIn {
@@ -115,15 +143,64 @@ a {
   animation: logLineIn 0.15s ease forwards;
 }
 
-.scanline:hover {
-  background-image: repeating-linear-gradient(
-    0deg,
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 0.3s ease forwards;
+  opacity: 0;
+}
+
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-fade {
+  animation: pageFade 0.15s ease forwards;
+}
+
+/* compile button brutalist press */
+.compile-btn:hover:not(:disabled) {
+  box-shadow: 3px 3px 0 #000000;
+}
+.compile-btn:active:not(:disabled) {
+  box-shadow: 1px 1px 0 #000000;
+  transform: translate(2px, 2px);
+}
+
+/* scanline overlay */
+.scanline-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: repeating-linear-gradient(
+    to bottom,
     transparent,
     transparent 2px,
-    rgba(0, 0, 0, 0.1) 2px,
-    rgba(0, 0, 0, 0.1) 3px
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
   );
-  box-shadow: 2px 2px 0 var(--accent-primary);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* idle stage hash pattern */
+.hash-bg {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.02) 3px,
+    rgba(255, 255, 255, 0.02) 4px
+  );
+}
+
+.topbar-noise {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 4px 4px;
 }
 
 .mono { font-family: var(--font-mono); }

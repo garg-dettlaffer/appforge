@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LAYER_COLORS } from "../../lib/constants";
 
 export type LayerKey = "ui" | "api" | "db" | "auth";
 const TABS: { key: LayerKey; label: string }[] = [
@@ -33,6 +34,9 @@ export function LayerTabs({
             key={t.key}
             onClick={() => onChange(t.key)}
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
               padding: "10px 18px",
               fontFamily: "var(--font-mono)",
               fontSize: "0.72rem",
@@ -43,11 +47,22 @@ export function LayerTabs({
               marginBottom: -1,
             }}
           >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                background: LAYER_COLORS[t.key],
+                display: "inline-block",
+                marginRight: 0,
+              }}
+            />
             {t.label}
           </button>
         );
       })}
-      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", paddingRight: 12 }}>{right}</div>
+      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, paddingRight: 12 }}>
+        {right}
+      </div>
     </div>
   );
 }

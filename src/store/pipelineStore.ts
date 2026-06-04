@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { FullSchema, LogEntry, PipelineMetrics, Stage } from "../types/schema";
+import type { FullSchema, HistoryEntry, LogEntry, PipelineMetrics, RepairEntry, Stage } from "../types/schema";
 import { STAGES } from "../lib/constants";
-import { buildMockSchema, MOCK_ASSUMPTIONS } from "../lib/mock";
+import { buildMockSchema, MOCK_ASSUMPTIONS, MOCK_REPAIRS } from "../lib/mock";
 
 const initialStages = (): Stage[] =>
   STAGES.map((s) => ({ id: s.id, name: s.name, status: "idle", output: null, repaired: false }));
@@ -12,12 +12,18 @@ interface PipelineStore {
   stages: Stage[];
   finalSchema: FullSchema | null;
   assumptions: string[];
+  repairLog: RepairEntry[];
   logs: LogEntry[];
   metrics: PipelineMetrics;
   prompt: string;
+  history: HistoryEntry[];
+  historyOpen: boolean;
   setPrompt: (p: string) => void;
   runPipeline: () => Promise<void>;
   reset: () => void;
+  clearLogs: () => void;
+  toggleHistory: () => void;
+  restoreHistory: (id: string) => void;
 }
 
 const ts = () => {
@@ -33,10 +39,30 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
   stages: initialStages(),
   finalSchema: null,
   assumptions: [],
+  repairLog: [],
   logs: [],
   metrics: { tokensUsed: 0, retries: 0, latencyMs: 0, confidence: 0 },
   prompt: "",
+  history: [],
+  historyOpen: false,
   setPrompt: (p) => set({ prompt: p }),
+  clearLogs: () => set({ logs: [] }),
+  toggleHistory: () => set((s) => ({ historyOpen: !s.historyOpen })),
+  restoreHistory: (id) => {
+    const h = get().history.find((x) => x.id === id);
+    if (!h) return;
+    set({
+      prompt: h.prompt,
+      status: h.status,
+      finalSchema: h.schema,
+      assumptions: h.assumptions,
+      repairLog: h.repairLog,
+      metrics: h.metrics,
+      stages: initialStages().map((s) => ({ ...s, status: "complete" })),
+      logs: [{ ts: ts(), text: `Restored compilation from ${new Date(h.ts).toLocaleTimeString()}`, kind: "ok", tag: "INIT" }],
+      historyOpen: false,
+    });
+  },
   reset: () =>
     set({
       status: "idle",
@@ -44,6 +70,7 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
       stages: initialStages(),
       finalSchema: null,
       assumptions: [],
+      repairLog: [],
       logs: [],
       metrics: { tokensUsed: 0, retries: 0, latencyMs: 0, confidence: 0 },
     }),
@@ -57,46 +84,62 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
       stages: initialStages(),
       finalSchema: null,
       assumptions: [],
-      logs: [{ ts: ts(), text: "Initializing pipeline..." }],
+      repairLog: [],
+      logs: [{ ts: ts(), text: "Initializing pipeline...", tag: "INIT" }],
       metrics: { tokensUsed: 0, retries: 0, latencyMs: 0, confidence: 0 },
     });
 
-    const pushLog = (text: string, kind?: LogEntry["kind"]) =>
-      set((s) => ({ logs: [...s.logs, { ts: ts(), text, kind }] }));
+    const pushLog = (text: string, tag: string, kind?: LogEntry["kind"]) =>
+      set((s) => ({ logs: [...s.logs, { ts: ts(), text, kind, tag }] }));
     const setStage = (idx: number, patch: Partial<Stage>) =>
       set((s) => ({ stages: s.stages.map((st, i) => (i === idx ? { ...st, ...patch } : st)) }));
 
     const delays = [800, 1200, 2000, 600];
+    const tags = ["S01", "S02", "S03", "S04"];
     const messages = [
-      ["Stage 01: Extracting intent from prompt...", "Stage 01: Complete. Entities found: 7"],
-      ["Stage 02: Designing system architecture...", "Stage 02: Complete. Tables: 5, Endpoints: 12"],
-      ["Stage 03: Generating schemas...", "Stage 03: Complete. Validating..."],
-      ["Stage 04: Repair engine scanning...", "Stage 04: Complete. 1 repair made."],
+      ["Extracting intent from prompt...", "Complete. Entities found: 7"],
+      ["Designing system architecture...", "Complete. Tables: 5, Endpoints: 12"],
+      ["Generating schemas...", "Complete. Validating..."],
+      ["Repair engine scanning...", "Complete. 1 repair made."],
     ];
 
     for (let i = 0; i < 4; i++) {
       set({ currentStage: i as 0 | 1 | 2 | 3 });
       setStage(i, { status: "running" });
-      pushLog(messages[i][0]);
+      pushLog(messages[i][0], tags[i]);
       await sleep(delays[i]);
-      if (i === 3) pushLog("⚠ Mismatch detected: UI field 'user_id' not in API", "warn");
-      pushLog(messages[i][1], "ok");
+      if (i === 3) pushLog("Mismatch detected: UI field 'user_id' not in API", "WARN", "warn");
+      pushLog(messages[i][1], tags[i], "ok");
       setStage(i, { status: "complete", repaired: i === 3 });
     }
 
     const schema = buildMockSchema(prompt);
-    pushLog("✓ Pipeline complete. Output ready.", "ok");
-    set({
+    pushLog("Pipeline complete. Output ready.", "DONE", "ok");
+    const metrics = {
+      tokensUsed: 3200 + Math.floor(prompt.length * 2.3),
+      retries: 1,
+      latencyMs: Date.now() - t0,
+      confidence: 91,
+    };
+    const entry: HistoryEntry = {
+      id: `${Date.now()}`,
+      prompt,
+      ts: Date.now(),
+      status: "complete",
+      latencyMs: metrics.latencyMs,
+      schema,
+      assumptions: MOCK_ASSUMPTIONS,
+      metrics,
+      repairLog: MOCK_REPAIRS,
+    };
+    set((s) => ({
       status: "complete",
       currentStage: null,
       finalSchema: schema,
       assumptions: MOCK_ASSUMPTIONS,
-      metrics: {
-        tokensUsed: 3200 + Math.floor(prompt.length * 2.3),
-        retries: 1,
-        latencyMs: Date.now() - t0,
-        confidence: 91,
-      },
-    });
+      repairLog: MOCK_REPAIRS,
+      metrics,
+      history: [entry, ...s.history].slice(0, 10),
+    }));
   },
 }));

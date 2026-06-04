@@ -1,4 +1,5 @@
-import type { FullSchema, EvalResult } from "../types/schema";
+import type { FullSchema, EvalResult, RepairEntry } from "../types/schema";
+import { EDGE_TYPES } from "./constants";
 
 export function buildMockSchema(prompt: string): FullSchema {
   const lower = prompt.toLowerCase();
@@ -66,6 +67,14 @@ export const MOCK_ASSUMPTIONS = [
   "RLS=enabled",
 ];
 
+export const MOCK_REPAIRS: RepairEntry[] = [
+  {
+    layer: "api",
+    issue: "UI form field 'user_id' missing in POST /contacts body",
+    fix: "Added 'user_id: uuid' to request body schema",
+  },
+];
+
 export function buildMockEvals(): EvalResult[] {
   const realPrompts = [
     "Build a CRM with login and contacts",
@@ -95,10 +104,13 @@ export function buildMockEvals(): EvalResult[] {
     const r = (i * 1103515245 + 12345) >>> 0;
     const pass = type === "real" ? r % 10 < 9 : r % 10 < 5;
     const partial = !pass && r % 3 === 0;
+    const subType: EvalResult["subType"] =
+      type === "real" ? "real" : EDGE_TYPES[i % EDGE_TYPES.length];
     return {
       id: i + 1,
       prompt: p,
       type,
+      subType,
       status: pass ? "PASS" : partial ? "PARTIAL" : "FAIL",
       retries: r % 4,
       latency: 1200 + (r % 3800),
