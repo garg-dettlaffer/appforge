@@ -21,7 +21,7 @@ export function Sidebar() {
         borderRight: "1px solid var(--bg-border)",
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 48px)",
+        height: "calc(100vh - 72px)",
         position: "sticky",
         top: 48,
       }}
@@ -36,8 +36,10 @@ export function Sidebar() {
               style={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 height: 40,
                 paddingLeft: active ? 18 : 20,
+                paddingRight: 16,
                 fontFamily: "var(--font-mono)",
                 fontSize: "0.75rem",
                 color: active ? "var(--text-primary)" : "var(--text-secondary)",
@@ -52,7 +54,8 @@ export function Sidebar() {
                 if (!active) e.currentTarget.style.background = "transparent";
               }}
             >
-              {n.label}
+              <span>{n.label}</span>
+              {active && <span style={{ color: "var(--text-primary)" }}>›</span>}
             </Link>
           );
         })}

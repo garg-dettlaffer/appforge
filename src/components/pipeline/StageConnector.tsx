@@ -3,13 +3,17 @@ export function StageConnector({ complete }: { complete: boolean }) {
     <div
       style={{
         width: 40,
-        height: 1,
-        background: "var(--bg-border)",
-        position: "relative",
-        flexShrink: 0,
         alignSelf: "center",
+        flexShrink: 0,
+        position: "relative",
       }}
     >
+      <div
+        style={{
+          borderTop: complete ? "1px solid #3a3a3a" : "1px dashed #2a2a2a",
+          transition: "border-color 0.2s ease, border-style 0.2s ease",
+        }}
+      />
       {complete && (
         <span
           style={{

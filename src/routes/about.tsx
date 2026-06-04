@@ -11,34 +11,55 @@ export const Route = createFileRoute("/about")({
   component: About,
 });
 
-const DIAGRAM = `USER PROMPT
-    │
-    ▼
-┌─────────────────┐
-│ STAGE 01        │
-│ INTENT EXTRACTOR│
-└────────┬────────┘
-         │ structured_intent.json
-         ▼
-┌─────────────────┐
-│ STAGE 02        │
-│ SYSTEM DESIGNER │
-└────────┬────────┘
-         │ architecture.json
-         ▼
-┌─────────────────┐
-│ STAGE 03        │
-│ SCHEMA GENERATOR│
-└────────┬────────┘
-         │ full_schema.json
-         ▼
-┌─────────────────┐
-│ STAGE 04        │
-│ REPAIR ENGINE   │
-└────────┬────────┘
-         │ validated_schema.json
-         ▼
-    OUTPUT`;
+const DIAGRAM = `                    ┌──────────────────────────────────────────┐
+                    │           APPFORGE COMPILER v1.0          │
+                    │     Natural Language → Executable Schema   │
+                    └──────────────────────┬───────────────────┘
+                                           │
+                              ╔════════════▼═══════════╗
+                              ║    USER PROMPT INPUT    ║
+                              ║  "Build a CRM with..."  ║
+                              ╚════════════╤═══════════╝
+                                           │
+                    ┌──────────────────────▼───────────────────┐
+                    │           STAGE 01: INTENT EXTRACTOR      │
+                    │  · Parse entities, features, user roles   │
+                    │  · Detect payments, analytics, auth       │
+                    │  · Generate assumptions for vague input   │
+                    │  OUTPUT → structured_intent.json          │
+                    └──────────────────────┬───────────────────┘
+                                           │ structured_intent.json
+                    ┌──────────────────────▼───────────────────┐
+                    │           STAGE 02: SYSTEM DESIGNER       │
+                    │  · Define DB tables + relations           │
+                    │  · Design API endpoints + methods         │
+                    │  · Set auth roles + permissions           │
+                    │  · Map UI pages + components              │
+                    │  OUTPUT → architecture.json               │
+                    └──────────────────────┬───────────────────┘
+                                           │ architecture.json
+                    ┌──────────────────────▼───────────────────┐
+                    │           STAGE 03: SCHEMA GENERATOR      │
+                    │  · Generate executable UI config          │
+                    │  · Generate typed API spec                │
+                    │  · Generate DB migration schema           │
+                    │  · Generate auth middleware config        │
+                    │  OUTPUT → full_schema.json                │
+                    └──────────────────────┬───────────────────┘
+                                           │ full_schema.json
+                    ┌──────────────────────▼───────────────────┐
+                    │           STAGE 04: REPAIR ENGINE         │
+                    │  · Validate cross-layer consistency       │
+                    │  · Detect: missing fields, bad refs       │
+                    │  · Repair: targeted, not full retry       │
+                    │  · Score confidence 0–100                 │
+                    │  OUTPUT → validated_schema.json           │
+                    └──────────────────────┬───────────────────┘
+                                           │
+                              ╔════════════▼═══════════╗
+                              ║   EXECUTABLE OUTPUT     ║
+                              ║  UI + API + DB + AUTH   ║
+                              ╚════════════════════════╝`;
 
 function H({ children }: { children: string }) {
   return (
@@ -67,7 +88,6 @@ function Inline({ children }: { children: string }) {
         fontSize: "0.82rem",
         background: "var(--bg-elevated)",
         padding: "1px 6px",
-        borderRadius: 2,
         color: "var(--accent-primary)",
       }}
     >
@@ -80,7 +100,7 @@ function About() {
   const date = new Date().toISOString().slice(0, 10);
   return (
     <AppShell>
-      <div style={{ maxWidth: 800, padding: "32px 24px" }}>
+      <div style={{ maxWidth: 900, padding: "32px 24px" }}>
         <div
           style={{
             fontFamily: "var(--font-mono)",
@@ -110,10 +130,10 @@ function About() {
             border: "1px solid var(--bg-border)",
             padding: 20,
             fontFamily: "var(--font-mono)",
-            fontSize: "0.75rem",
+            fontSize: "0.7rem",
             color: "var(--text-secondary)",
             overflow: "auto",
-            lineHeight: 1.4,
+            lineHeight: 1.3,
           }}
         >
           {DIAGRAM}

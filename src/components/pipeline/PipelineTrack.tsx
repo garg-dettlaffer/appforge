@@ -24,7 +24,7 @@ export function PipelineTrack() {
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.3, ease: "easeOut", delay: i * 0.05 }}
               >
-                <StageNode index={s.id} name={s.name} status={stages[i].status} />
+                <StageNode index={s.id} name={s.name} type={s.type} status={stages[i].status} />
               </motion.div>
               {i < STAGES.length - 1 && <StageConnector complete={stages[i].status === "complete"} />}
             </div>
